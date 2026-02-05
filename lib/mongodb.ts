@@ -1,32 +1,50 @@
-import mongoose from "mongoose";
+import mongoose from 'mongoose';
 
-/**
- * Cached connection utility for Next.js hot-reload.
- */
-const MONGODB_URI = process.env.MONGODB_URI as string;
+const MONGODB_URI = process.env.MONGODB_URI;
 
 if (!MONGODB_URI) {
-  throw new Error("Please define the MONGODB_URI environment variable inside .env.local");
+  throw new Error('Please define the MONGODB_URI environment variable');
 }
 
-/**
- * Global is used here to maintain a cached connection across hot reloads in development.
- * This prevents connections growing exponentially during API route usage.
- */
-let cached = (global as any).mongoose as {
+// Define the type for our cache
+type MongooseCache = {
   conn: typeof mongoose | null;
   promise: Promise<typeof mongoose> | null;
 };
 
-if (!cached) {
-  cached = (global as any).mongoose = { conn: null, promise: null };
+// Extend the NodeJS global type with our mongoose cache
+declare global {
+  // eslint-disable-next-line no-var
+  var mongoose: MongooseCache | undefined;
 }
 
-export async function dbConnect(): Promise<typeof mongoose> {
-  if (cached.conn) return cached.conn;
-  if (!cached.promise) {
-    cached.promise = mongoose.connect(MONGODB_URI).then((mongooseInst) => mongooseInst);
+let cached: MongooseCache = global.mongoose || { conn: null, promise: null };
+
+if (!global.mongoose) {
+  global.mongoose = cached;
+}
+
+async function dbConnect(): Promise<typeof mongoose> {
+  if (cached.conn) {
+    return cached.conn;
   }
-  cached.conn = await cached.promise;
+
+  if (!cached.promise) {
+  const opts = {
+    bufferCommands: false,
+  };
+  // Add type assertion to ensure TypeScript knows this is a string
+  cached.promise = mongoose.connect(MONGODB_URI as string, opts);
+}
+
+  try {
+    cached.conn = await cached.promise;
+  } catch (e) {
+    cached.promise = null;
+    throw e;
+  }
+
   return cached.conn;
 }
+
+export default dbConnect;

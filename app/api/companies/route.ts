@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { dbConnect } from "@/lib/mongodb";
+import dbConnect from "@/lib/mongodb";
 import Company from "@/models/Company";
 
 export async function GET() {

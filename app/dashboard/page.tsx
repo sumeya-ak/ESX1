@@ -97,7 +97,7 @@ export default function DashboardPage() {
       <div className="p-8 flex items-center justify-center min-h-screen">
         <div className="text-center">
           <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-          <p className="mt-4 text-muted-foreground">Loading...</p>
+          <p className="mt-4 text-muted-foreground">Loading...ni hao</p>
         </div>
       </div>
     );
